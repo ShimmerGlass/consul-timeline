@@ -1,0 +1,10 @@
+# feats
+
+* ui loader
+* storage distributed lock
+* time selection
+
+# bugs
+
+* instance count should reflect healthy
+* ui resize
