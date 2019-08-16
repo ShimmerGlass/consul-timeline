@@ -102,14 +102,15 @@ func (s *Storage) Query(ctx context.Context, q storage.Query) ([]tl.Event, error
 			new_check_status,
 			check_output
 		FROM events
-		WHERE time >= ?
+		WHERE time <= ?
 	`
 	args = append(args, q.Start)
 	if q.Service != "" {
 		qs += "&& service_name = ?\n"
 		args = append(args, q.Service)
 	}
-	qs += "LIMIT 0, ?"
+	qs += "ORDER BY `time` DESC\n"
+	qs += "LIMIT 0, ?\n"
 	args = append(args, q.Limit)
 
 	rows, err := s.db.QueryContext(ctx, qs, args...)
