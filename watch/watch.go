@@ -57,7 +57,7 @@ func (w *Watcher) Run() <-chan tl.Event {
 	go w.watchNodes()
 	w.readyWg.Wait()
 	w.ready = true
-	log.Info("watch ready")
+	log.Info("watch: ready")
 	return w.out
 }
 
@@ -120,7 +120,7 @@ func (w *Watcher) handleServicesChanged(services map[string][]string) {
 }
 
 func (w *Watcher) watchService(name string) {
-	log.Printf("watching service %s", name)
+	log.Debugf("watching service %s", name)
 
 	state := &serviceWatch{}
 	w.services[name] = state
@@ -137,7 +137,7 @@ func (w *Watcher) watchService(name string) {
 				w.lock.Lock()
 				delete(w.services, name)
 				w.lock.Unlock()
-				log.Printf("stopping watching service %s", name)
+				log.Debugf("stopping watching service %s", name)
 				return
 			}
 
@@ -226,7 +226,7 @@ func (w *Watcher) handleNodesChanged(nodes []*structs.Node) {
 }
 
 func (w *Watcher) watchNode(node *structs.Node) {
-	log.Printf("watching node %s", node.Node)
+	log.Debugf("watching node %s", node.Node)
 
 	state := &nodeWatch{Node: node}
 	w.nodes[node.Node] = state
@@ -243,7 +243,7 @@ func (w *Watcher) watchNode(node *structs.Node) {
 				w.lock.Lock()
 				delete(w.nodes, node.Node)
 				w.lock.Unlock()
-				log.Printf("stopping watching node %s", node.Node)
+				log.Debugf("stopping watching node %s", node.Node)
 				return
 			}
 

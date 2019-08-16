@@ -32,13 +32,17 @@ func dupEvents(in <-chan tl.Event) (<-chan tl.Event, <-chan tl.Event) {
 }
 
 func main() {
-	log.SetLevel(log.DebugLevel)
-
 	cfg := GetConfig()
+
+	logLvl, err := log.ParseLevel(cfg.LogLevel)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.SetLevel(logLvl)
 
 	// storage
 	var storage storage.Storage
-	var err error
 
 	if cfg.Mysql != nil {
 		storage, err = mysql.New(*cfg.Mysql)

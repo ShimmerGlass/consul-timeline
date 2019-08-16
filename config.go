@@ -14,19 +14,24 @@ import (
 )
 
 type Config struct {
+	LogLevel  string        `json:"log_level"`
 	Consul    consul.Config `json:"consul"`
 	Server    server.Config `json:"server"`
 	Mysql     *mysql.Config `json:"mysql"`
 	Cassandra *cass.Config  `json:"cassandra"`
 }
 
-var configFileFlag = flag.String("config", "", "Config file path (yaml, json)")
-var storageFlag = flag.String("storage", "mysql", "Storage backend (mysql, cassandra)")
+var (
+	logLevelFlag   = flag.String("log-level", "info", "(debug, info, warning, error, fatal)")
+	configFileFlag = flag.String("config", "", "Config file path (yaml, json)")
+	storageFlag    = flag.String("storage", "mysql", "Storage backend (mysql, cassandra)")
+)
 
 func FromFlags() Config {
 	cfg := Config{
-		Consul: consul.ConfigFromFlags(),
-		Server: server.ConfigFromFlags(),
+		LogLevel: *logLevelFlag,
+		Consul:   consul.ConfigFromFlags(),
+		Server:   server.ConfigFromFlags(),
 	}
 
 	switch *storageFlag {
@@ -55,7 +60,10 @@ func GetConfig() Config {
 		log.Fatal(err)
 	}
 
-	var cfg Config
+	cfg := Config{
+		LogLevel: "info",
+	}
+
 	err = yaml.Unmarshal(f, &cfg)
 	if err != nil {
 		log.Fatal(err)
