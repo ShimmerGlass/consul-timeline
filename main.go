@@ -1,15 +1,16 @@
 package main
 
 import (
-	"flag"
-	"strings"
-
 	"github.com/aestek/consul-timeline/consul"
+	"github.com/aestek/consul-timeline/storage"
+
+	_ "github.com/go-sql-driver/mysql"
+
 	"github.com/aestek/consul-timeline/server"
 	cass "github.com/aestek/consul-timeline/storage/cassandra"
+	"github.com/aestek/consul-timeline/storage/mysql"
 	"github.com/aestek/consul-timeline/timeline"
 	"github.com/aestek/consul-timeline/watch"
-	"github.com/gocql/gocql"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -33,22 +34,28 @@ func dupEvents(in <-chan tl.Event) (<-chan tl.Event, <-chan tl.Event) {
 func main() {
 	log.SetLevel(log.DebugLevel)
 
-	consulAddr := flag.String("consul", "localhost:8500", "Consul agent address")
-	listenAddr := flag.String("listen", ":8888", "Listen address")
-	cassandraAddr := flag.String("cassandra", "127.0.0.1", "Cassandra addresses, comma separated")
-	cassandraKeyspace := flag.String("cassandra-keyspace", "consul_timeline", "Cassandra keyspace")
-	flag.Parse()
+	cfg := GetConfig()
+
+	// storage
+	var storage storage.Storage
+	var err error
+
+	if cfg.Mysql != nil {
+		storage, err = mysql.New(*cfg.Mysql)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else if cfg.Cassandra != nil {
+		storage, err = cass.New(*cfg.Cassandra)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		log.Fatal("no storage provided")
+	}
 
 	// consul client
-	consul := consul.New(*consulAddr)
-
-	// cassandra client
-	cluster := gocql.NewCluster(strings.Split(*cassandraAddr, ",")...)
-	cluster.Keyspace = *cassandraKeyspace
-	session, err := cluster.CreateSession()
-	if err != nil {
-		log.Fatal(err)
-	}
+	consul := consul.New(cfg.Consul)
 
 	// consul watch
 	w := watch.New(consul, eventsBuffer)
@@ -56,13 +63,10 @@ func main() {
 
 	storageEvents, apiEvents := dupEvents(events)
 
-	// storage
-	storage := cass.New(session)
-
 	// HTTP api
-	api := server.New(storage, w, apiEvents)
+	api := server.New(cfg.Server, storage, w, apiEvents)
 	go func() {
-		err = api.Serve(*listenAddr)
+		err := api.Serve()
 		if err != nil {
 			log.Fatal(err)
 		}

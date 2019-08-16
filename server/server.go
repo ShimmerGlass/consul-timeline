@@ -22,6 +22,8 @@ var upgrader = websocket.Upgrader{
 }
 
 type Server struct {
+	listenAddr string
+
 	storage storage.Storage
 	router  *httprouter.Router
 
@@ -31,17 +33,18 @@ type Server struct {
 	ws *ws
 }
 
-func New(storage storage.Storage, services ServiceProvider, events <-chan tl.Event) *Server {
+func New(cfg Config, storage storage.Storage, services ServiceProvider, events <-chan tl.Event) *Server {
 	return &Server{
-		storage:  storage,
-		router:   httprouter.New(),
-		events:   events,
-		services: services,
-		ws:       newWs(),
+		listenAddr: cfg.ListenAddr,
+		storage:    storage,
+		router:     httprouter.New(),
+		events:     events,
+		services:   services,
+		ws:         newWs(),
 	}
 }
 
-func (s *Server) Serve(addr string) error {
+func (s *Server) Serve() error {
 	s.serveStatic()
 
 	s.router.GET("/", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -61,9 +64,9 @@ func (s *Server) Serve(addr string) error {
 			Limit:   filter.Limit,
 		}
 
-		events, err := s.storage.Query(q)
+		events, err := s.storage.Query(r.Context(), q)
 		if err != nil {
-			log.Error(err)
+			log.Errorf("query error %s", err)
 			http.Error(w, err.Error(), 500)
 			return
 		}
@@ -84,7 +87,7 @@ func (s *Server) Serve(addr string) error {
 
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			log.Error(err)
+			log.Errorf("ws connection upgrade: %s", err)
 			return
 		}
 
@@ -97,5 +100,5 @@ func (s *Server) Serve(addr string) error {
 		}
 	}()
 
-	return http.ListenAndServe(addr, gziphandler.GzipHandler(s.router))
+	return http.ListenAndServe(s.listenAddr, gziphandler.GzipHandler(s.router))
 }

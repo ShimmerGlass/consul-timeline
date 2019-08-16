@@ -3,6 +3,11 @@
 * ui loader
 * storage distributed lock
 * time selection
+* filters
+* metrics
+* status endpoint
+* details pannel
+* do not ignore context in cass storage
 
 # bugs
 

@@ -26,15 +26,15 @@ type Consul struct {
 	ready sync.WaitGroup
 }
 
-func New(agentAddr string) *Consul {
+func New(cfg Config) *Consul {
 	client, err := api.NewClient(&api.Config{
-		Address: agentAddr,
+		Address: cfg.Address,
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
 	c := &Consul{
-		agentAddr: agentAddr,
+		agentAddr: cfg.Address,
 		connPool: &pool.ConnPool{
 			LogOutput:  os.Stderr,
 			MaxTime:    30 * time.Second,
@@ -119,7 +119,7 @@ func (c *Consul) watchServers() {
 			WaitTime:  10 * time.Minute,
 		})
 		if err != nil {
-			log.Error(err)
+			log.Errorf("error retrieving consul servers: %s", err)
 			time.Sleep(time.Second)
 			continue
 		}
