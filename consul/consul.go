@@ -16,7 +16,7 @@ import (
 )
 
 type Consul struct {
-	agentAddr   string
+	config      Config
 	connPool    *pool.ConnPool
 	client      *api.Client
 	dc          string
@@ -29,12 +29,13 @@ type Consul struct {
 func New(cfg Config) *Consul {
 	client, err := api.NewClient(&api.Config{
 		Address: cfg.Address,
+		Token:   cfg.Token,
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
 	c := &Consul{
-		agentAddr: cfg.Address,
+		config: cfg,
 		connPool: &pool.ConnPool{
 			LogOutput:  os.Stderr,
 			MaxTime:    30 * time.Second,
@@ -109,6 +110,13 @@ func (c *Consul) Node(idx uint64, name string) (*structs.IndexedHealthChecks, er
 	}, out)
 
 	return out, err
+}
+
+func (c *Consul) Lock() (*api.Lock, error) {
+	return c.client.LockOpts(&api.LockOptions{
+		SessionTTL: (10 * time.Second).String(),
+		Key:        c.config.LockPath,
+	})
 }
 
 func (c *Consul) watchServers() {

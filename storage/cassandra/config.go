@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+const Name = "cassandra"
+
 type Config struct {
 	Addresses []string
 	Keyspace  string

@@ -4,6 +4,8 @@ import (
 	"flag"
 )
 
+const Name = "mysql"
+
 type Config struct {
 	Host     string `json:"host"`
 	Port     int    `json:"port"`

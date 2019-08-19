@@ -9,16 +9,17 @@ import (
 
 	"github.com/aestek/consul-timeline/consul"
 	"github.com/aestek/consul-timeline/server"
-	"github.com/aestek/consul-timeline/storage/cassandra"
+	cass "github.com/aestek/consul-timeline/storage/cassandra"
 	"github.com/aestek/consul-timeline/storage/mysql"
 )
 
 type Config struct {
 	LogLevel  string        `json:"log_level"`
+	Storage   string        `json:"storage"`
 	Consul    consul.Config `json:"consul"`
 	Server    server.Config `json:"server"`
-	Mysql     *mysql.Config `json:"mysql"`
-	Cassandra *cass.Config  `json:"cassandra"`
+	Mysql     mysql.Config  `json:"mysql"`
+	Cassandra cass.Config   `json:"cassandra"`
 }
 
 var (
@@ -29,20 +30,12 @@ var (
 
 func FromFlags() Config {
 	cfg := Config{
-		LogLevel: *logLevelFlag,
-		Consul:   consul.ConfigFromFlags(),
-		Server:   server.ConfigFromFlags(),
-	}
-
-	switch *storageFlag {
-	case "mysql":
-		c := mysql.ConfigFromFlags()
-		cfg.Mysql = &c
-	case "cassandra":
-		c := cass.ConfigFromFlags()
-		cfg.Cassandra = &c
-	default:
-		log.Fatalf("unknown storage %s", *storageFlag)
+		LogLevel:  *logLevelFlag,
+		Storage:   *storageFlag,
+		Consul:    consul.ConfigFromFlags(),
+		Server:    server.ConfigFromFlags(),
+		Mysql:     mysql.ConfigFromFlags(),
+		Cassandra: cass.ConfigFromFlags(),
 	}
 
 	return cfg

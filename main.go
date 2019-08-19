@@ -1,6 +1,10 @@
 package main
 
 import (
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/aestek/consul-timeline/consul"
 	"github.com/aestek/consul-timeline/storage"
 
@@ -9,7 +13,8 @@ import (
 	"github.com/aestek/consul-timeline/server"
 	cass "github.com/aestek/consul-timeline/storage/cassandra"
 	"github.com/aestek/consul-timeline/storage/mysql"
-	"github.com/aestek/consul-timeline/timeline"
+	"github.com/aestek/consul-timeline/storage/noop"
+	tl "github.com/aestek/consul-timeline/timeline"
 	"github.com/aestek/consul-timeline/watch"
 	log "github.com/sirupsen/logrus"
 )
@@ -41,25 +46,33 @@ func main() {
 
 	log.SetLevel(logLvl)
 
-	// storage
-	var storage storage.Storage
-
-	if cfg.Mysql != nil {
-		storage, err = mysql.New(*cfg.Mysql)
-		if err != nil {
-			log.Fatal(err)
-		}
-	} else if cfg.Cassandra != nil {
-		storage, err = cass.New(*cfg.Cassandra)
-		if err != nil {
-			log.Fatal(err)
-		}
-	} else {
-		log.Fatal("no storage provided")
-	}
-
 	// consul client
 	consul := consul.New(cfg.Consul)
+
+	// storage
+	var strg storage.Storage
+
+	switch cfg.Storage {
+	case mysql.Name:
+		strg, err = mysql.New(cfg.Mysql)
+		if err != nil {
+			log.Fatal(err)
+		}
+	case cass.Name:
+		strg, err = cass.New(cfg.Cassandra)
+		if err != nil {
+			log.Fatal(err)
+		}
+	case noop.Name:
+		fallthrough
+	default:
+		log.Warn("using noop storage (events will be dropped)")
+		strg = noop.New()
+	}
+
+	dstrg := storage.NewDistributed(consul, strg)
+	defer dstrg.Stop()
+	strg = dstrg
 
 	// consul watch
 	w := watch.New(consul, eventsBuffer)
@@ -68,7 +81,7 @@ func main() {
 	storageEvents, apiEvents := dupEvents(events)
 
 	// HTTP api
-	api := server.New(cfg.Server, storage, w, apiEvents)
+	api := server.New(cfg.Server, strg, w, apiEvents)
 	go func() {
 		err := api.Serve()
 		if err != nil {
@@ -76,10 +89,17 @@ func main() {
 		}
 	}()
 
-	for e := range storageEvents {
-		err := storage.Store(e)
-		if err != nil {
-			log.Error(err)
+	go func() {
+		for e := range storageEvents {
+			err := strg.Store(e)
+			if err != nil {
+				log.Error(err)
+			}
 		}
-	}
+	}()
+
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+	<-c
+	log.Info("stopping...")
 }

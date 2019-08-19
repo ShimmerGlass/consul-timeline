@@ -1,7 +1,6 @@
 # feats
 
 * ui loader
-* storage distributed lock
 * time selection
 * filters
 * metrics
