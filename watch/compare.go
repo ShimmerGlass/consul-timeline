@@ -3,10 +3,11 @@ package watch
 import (
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/hashicorp/consul/types"
 
-	"github.com/aestek/consul-timeline/timeline"
+	tl "github.com/aestek/consul-timeline/timeline"
 	"github.com/hashicorp/consul/agent/structs"
 	api "github.com/hashicorp/consul/api"
 )
@@ -98,6 +99,15 @@ func (w *Watcher) compareServiceStates(at time.Time, old, new []structs.CheckSer
 	}
 }
 
+func filterUnicodeChars(s string) string {
+	return strings.Map(func(r rune) rune {
+		if r == utf8.RuneError {
+			return -1
+		}
+		return r
+	}, s)
+}
+
 func (w *Watcher) compareChecks(base tl.Event, old structs.HealthChecks, new structs.HealthChecks) {
 	oldIdx := map[types.CheckID]*structs.HealthCheck{}
 	newIdx := map[types.CheckID]*structs.HealthCheck{}
@@ -126,7 +136,7 @@ func (w *Watcher) compareChecks(base tl.Event, old structs.HealthChecks, new str
 		evt.CheckName = new.Name
 		evt.OldCheckStatus = oldStatus
 		evt.NewCheckStatus = tl.StatusFromString(new.Status)
-		evt.CheckOutput = new.Output
+		evt.CheckOutput = filterUnicodeChars(new.Output)
 		w.out <- evt
 	}
 
