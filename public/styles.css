@@ -182,6 +182,8 @@ body {
     overflow: hidden;
     white-space: nowrap;
     min-width: 830px;
+    border-top: 1px solid transparent;
+    border-bottom: 1px solid transparent;
 }
 
 #container .row.message {
@@ -195,6 +197,11 @@ body {
 
 #container .row.odd {
     background: #001013;
+}
+
+#container .row:hover {
+    border-top: 1px solid #00323a;
+    border-bottom: 1px solid #00323a;
 }
 
 #container .row>*,
@@ -258,4 +265,26 @@ body {
 .select-dd li.selected {
     background: #00323a;
     color: #64faff;
+}
+
+#details-pane {
+    position: absolute;
+    top: 80px;
+    bottom: 0;
+    right: 0;
+    width: 40%;
+    background : #002227;
+    padding: 10px;
+    display: none;
+    overflow: auto;
+}
+
+#details-pane .key {
+    font-weight: bold;
+    display: inline-block;
+    width: 170px;
+}
+
+#details-pane li {
+    margin-bottom: 5px;
 }

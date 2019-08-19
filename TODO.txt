@@ -3,7 +3,6 @@
 * ui loader
 * filters
 * metrics
-* details pannel
 * do not ignore context in cass storage
 
 # bugs

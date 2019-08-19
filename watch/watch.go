@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/aestek/consul-timeline/timeline"
+	tl "github.com/aestek/consul-timeline/timeline"
 	"github.com/hashicorp/consul/agent/structs"
 	log "github.com/sirupsen/logrus"
 )
@@ -155,7 +155,7 @@ func (w *Watcher) watchService(name string) {
 
 			w.lock.Lock()
 			if w.ready {
-				w.handleServiceChanged(name, time.Now(), res.Nodes)
+				w.handleServiceChanged(name, time.Now().UTC(), res.Nodes)
 			}
 			w.services[name].State = res.Nodes
 			w.lock.Unlock()
@@ -268,7 +268,7 @@ func (w *Watcher) watchNode(node *structs.Node) {
 
 			w.lock.Lock()
 			if w.ready {
-				w.handleNodeChanged(node.Node, time.Now(), filteredChecks)
+				w.handleNodeChanged(node.Node, time.Now().UTC(), filteredChecks)
 			}
 			state.Checks = filteredChecks
 			w.lock.Unlock()

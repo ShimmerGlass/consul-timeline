@@ -139,7 +139,7 @@ class Renderer {
     var leading = scrollTop / this.rowHeight;
     var nToAdd = this.rowOverflow - leading;
     if (nToAdd <= this.rowOverflow / 2 &&
-        this.startIndex > this.rowOverflow / 2) {
+      this.startIndex > this.rowOverflow / 2) {
       return;
     }
 
@@ -158,8 +158,8 @@ class Renderer {
 
   removeTrailing() {
     var actual = (this.container.prop('scrollHeight') -
-                  this.container.scrollTop() - this.container.innerHeight()) /
-        this.rowHeight;
+      this.container.scrollTop() - this.container.innerHeight()) /
+      this.rowHeight;
 
     if (actual - this.rowOverflow <= this.rowOverflow / 2) {
       return;
@@ -204,8 +204,8 @@ class Renderer {
 
     var rows = this.container.find('.row[data-key="' + key + '"]').toArray();
     var row =
-        $('<div class="row" data-key="' + key + '" data-subkey="' + subKey +
-          '"></div>');
+      $('<div class="row" data-key="' + key + '" data-subkey="' + subKey +
+        '"></div>');
 
     if (rows.length) {
       $(rows[0]).hasClass('odd') && row.addClass('odd');
@@ -236,12 +236,16 @@ class Renderer {
 
       row.empty();
 
+      ((d, row) => {
+        row.click(() => { this.drawDetails(d); });
+      })(d, row);
+
       if (i == 0) {
         var time = new Date(d.time).getTime();
         var html = '';
 
         html += '<div class="time" data-ts="' + time + '" title="' + d.time +
-            '">' + formatTime(time) + '</div>';
+          '">' + formatTime(time) + '</div>';
 
         html += '<div class="node" title="' + d.node_ip + '">';
         if (d.old_node_status && d.new_node_status) {
@@ -252,11 +256,11 @@ class Renderer {
         if (d.service_id) {
           html += '<div class="service" title="' + d.service_id + '">';
           html += this.getStatusesMarkup(
-              d.old_service_status, d.new_service_status);
+            d.old_service_status, d.new_service_status);
           html += '&nbsp;&nbsp;' + d.service_name + '&nbsp;&nbsp;';
           html += '(' + d.old_instance_count +
-              '&nbsp;<i class="fas fa-arrow-right missing" style="font-size: 0.8em"></i>&nbsp;' +
-              d.new_instance_count + ')';
+            '&nbsp;<i class="fas fa-arrow-right missing" style="font-size: 0.8em"></i>&nbsp;' +
+            d.new_instance_count + ')';
           html += '</div>';
         } else {
           html += '<div class="service"></div>';
@@ -288,39 +292,69 @@ class Renderer {
 
   getStatusMarkup(statusCode) {
     var icon;
+    var title;
     switch (statusCode) {
       case 1:
         icon = 'fa-question';
+        title = 'Missing';
         break;
       case 2:
         icon = 'fa-times';
+        title = 'Critical';
         break;
       case 3:
         icon = 'fa-exclamation-triangle';
+        title = 'Warning';
         break;
       case 4:
         icon = 'fa-check';
+        title = 'Passing';
         break;
       case 5:
         icon = 'fa-wrench';
+        title = 'Maintenance';
         break;
     }
 
     return '<i class="fas ' + icon + ' ' + serviceStatusClasses[statusCode] +
-        '" style="font-size: 1.2em"></i>';
+      '" style="font-size: 1.2em" title="' + title + '"></i>';
   }
 
   getStatusesMarkup(oldStatus, newStatus) {
     var html = "";
     html += this.getStatusMarkup(oldStatus) + "";
     html +=
-        '&nbsp;<i class="fas fa-arrow-right missing" style="font-size: 0.8em"></i>&nbsp;';
+      '&nbsp;<i class="fas fa-arrow-right missing" style="font-size: 0.8em"></i>&nbsp;';
     html += this.getStatusMarkup(newStatus);
     return html;
   }
 
   visibleStartIndex() {
     return Math.floor(
-        this.startIndex + (this.container.scrollTop() / this.rowHeight));
+      this.startIndex + (this.container.scrollTop() / this.rowHeight));
+  }
+
+  drawDetails(d) {
+    var res = '<ul>';
+    for (var i in d) {
+      if (!d[i]) {
+        continue;
+      }
+      var k = i.replace(/_/g, ' ');
+      res += '<li><span class="key">' + k + ':</span> ';
+      if (i.endsWith('_status')) {
+        res += this.getStatusMarkup(d[i])
+      } else if (i == 'check_output') {
+        res += '<pre class="value">' + $('<div />').text(d[i] || '').html() + '</pre>';
+      } else {
+        res += d[i]
+      }
+      res += '</li>';
+    }
+    res += '</ul>';
+
+    $('#details-pane').html(res);
+    $('#details-pane').show();
+    $('#details-pane').one('click', () => { $('#details-pane').hide(); });
   }
 }
