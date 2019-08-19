@@ -33,9 +33,16 @@
     <div id="back-to-top"><span class="count"></span> newer logs</div>
     <div id="time-selector">
         <ul>
-            <li data-val="0" class="active">Now</li>
-            <li data-val="-3600000">1 hour ago</li>
-            <li data-val="-10800000">3 hours ago</li>
+            <li class="title">Quick :</li>
+            <li data-val="0" class="active">From now</li>
+            <li data-val="-3600000">From 1 hour ago</li>
+            <li data-val="-10800000">From 3 hours ago</li>
+            <li data-val="-21600000">From 6 hours ago</li>
+            <li data-val="-86400000">From yesterday</li>
+
+            <li class="title">Custom :</li>
+            <li class="custom"><input type="datetime-local" class="custom-in" /><button class="custom-btn">Go</button>
+            </li>
         </ul>
     </div>
 </body>

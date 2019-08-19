@@ -1,7 +1,6 @@
 # feats
 
 * ui loader
-* time selection
 * filters
 * metrics
 * status endpoint
@@ -10,5 +9,6 @@
 
 # bugs
 
+* non-printable chars in check output
 * instance count should reflect healthy
 * ui resize

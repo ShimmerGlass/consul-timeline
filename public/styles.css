@@ -94,7 +94,8 @@ body {
     position: fixed;
     top: 40px;
     right: 0;
-    width: 300px;
+    width: 400px;
+    padding: 1px 10px;
     background: #002227;
     border-top: 1px solid #00323a;
     display: none;
@@ -114,8 +115,26 @@ body {
     font-size: .8em;
 }
 
+#time-selector ul li.title {
+    font-weight: bold;
+}
+
 #time-selector ul li.active {
     color: #64faff;
+}
+
+#time-selector ul li.custom button {
+    float: right;
+    margin: 0;
+    background: transparent;
+    border-width: 0;
+    border-left-color: #00323a;
+    height: 100%;
+    color: white;
+}
+
+#time-selector ul li.data-val {
+    cursor: pointer;
 }
 
 #header {
