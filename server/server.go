@@ -6,7 +6,7 @@ import (
 
 	"github.com/NYTimes/gziphandler"
 	"github.com/aestek/consul-timeline/storage"
-	"github.com/aestek/consul-timeline/timeline"
+	tl "github.com/aestek/consul-timeline/timeline"
 	"github.com/gorilla/websocket"
 	"github.com/julienschmidt/httprouter"
 	log "github.com/sirupsen/logrus"
@@ -92,6 +92,11 @@ func (s *Server) Serve() error {
 		}
 
 		s.ws.Add(conn, filter)
+	})
+
+	s.router.GET("/status", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		w.Write([]byte("OK"))
+		w.WriteHeader(http.StatusOK)
 	})
 
 	go func() {
