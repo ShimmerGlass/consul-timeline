@@ -12,8 +12,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type ServiceProvider interface {
-	Services() []string
+type FilterEntriesProvider interface {
+	FilterEntries() []string
 }
 
 var upgrader = websocket.Upgrader{
@@ -28,12 +28,12 @@ type Server struct {
 	router  *httprouter.Router
 
 	events   <-chan tl.Event
-	services ServiceProvider
+	services FilterEntriesProvider
 
 	ws *ws
 }
 
-func New(cfg Config, storage storage.Storage, services ServiceProvider, events <-chan tl.Event) *Server {
+func New(cfg Config, storage storage.Storage, services FilterEntriesProvider, events <-chan tl.Event) *Server {
 	return &Server{
 		listenAddr: cfg.ListenAddr,
 		storage:    storage,
@@ -59,9 +59,9 @@ func (s *Server) Serve() error {
 		}
 
 		q := storage.Query{
-			Start:   filter.Start,
-			Service: filter.Service,
-			Limit:   filter.Limit,
+			Start:  filter.Start,
+			Filter: filter.Filter,
+			Limit:  filter.Limit,
 		}
 
 		events, err := s.storage.Query(r.Context(), q)
@@ -74,8 +74,8 @@ func (s *Server) Serve() error {
 		json.NewEncoder(w).Encode(events)
 	})
 
-	s.router.GET("/services", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		json.NewEncoder(w).Encode(s.services.Services())
+	s.router.GET("/filter-entries", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		json.NewEncoder(w).Encode(s.services.FilterEntries())
 	})
 
 	s.router.GET("/ws", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

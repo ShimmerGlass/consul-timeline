@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/aestek/consul-timeline/storage"
-	"github.com/aestek/consul-timeline/timeline"
+	tl "github.com/aestek/consul-timeline/timeline"
 	"github.com/gocql/gocql"
 	"github.com/pkg/errors"
 )
@@ -62,8 +62,8 @@ func (s *Storage) Store(evt tl.Event) error {
 }
 
 func (s *Storage) Query(_ context.Context, q storage.Query) ([]tl.Event, error) {
-	if q.Service != "" {
-		return s.Services.FetchBefore(q.Service, q.Start, q.Limit)
+	if q.Filter != "" {
+		return s.Services.FetchBefore(q.Filter, q.Start, q.Limit)
 	}
 
 	return s.Global.FetchBefore(q.Start, q.Limit)

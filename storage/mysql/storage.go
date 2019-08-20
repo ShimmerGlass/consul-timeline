@@ -105,9 +105,9 @@ func (s *Storage) Query(ctx context.Context, q storage.Query) ([]tl.Event, error
 		WHERE time <= ?
 	`
 	args = append(args, q.Start)
-	if q.Service != "" {
-		qs += "&& service_name = ?\n"
-		args = append(args, q.Service)
+	if q.Filter != "" {
+		qs += "&& (service_name = ? || node_name = ?) \n"
+		args = append(args, q.Filter, q.Filter)
 	}
 	qs += "ORDER BY `time` DESC\n"
 	qs += "LIMIT 0, ?\n"

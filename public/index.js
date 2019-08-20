@@ -1,10 +1,10 @@
 'use strict';
 
-function getEvents(start, service, limit, cb) {
+function getEvents(start, filter, limit, cb) {
   $.getJSON(
-      "/events?limit=" + limit + "&start=" + Math.round(start / 1000) +
-          "&service=" + (service || ''),
-      cb)
+    "/events?limit=" + limit + "&start=" + Math.round(start / 1000) +
+    "&filter=" + (filter || ''),
+    cb)
 }
 
 class Vue {
@@ -15,7 +15,7 @@ class Vue {
     this.requestLimit = 100;
 
     this.filter = this.filterFromUrl();
-    $('#status .service').val(this.filter.service || '');
+    $('#status .filter').val(this.filter.filter || '');
     if (this.filter.start) {
       var d = new Date();
       d.setTime(this.filter.start);
@@ -29,50 +29,50 @@ class Vue {
 
     var that = this;
 
-    $('#status .service')
-        .change(function() {
-          var n = $(this).val();
-          if (n == that.filter.service) {
-            return;
-          }
+    $('#status .filter')
+      .change(function () {
+        var n = $(this).val();
+        if (n == that.filter.filter) {
+          return;
+        }
 
-          that.filter.service = n;
-          that.updateUrlFromFilter(that.filter);
-          that.reset();
-        });
+        that.filter.filter = n;
+        that.updateUrlFromFilter(that.filter);
+        that.reset();
+      });
 
     $("#back-to-top").click(() => { this.renderer.reset(); });
 
     $('#time-selector-btn').click(() => { $('#time-selector').toggle(); });
     $('#time-selector [data-val]')
-        .click(function() {
-          $('#time-selector-btn').text($(this).text());
-          $('#time-selector [data-val]').removeClass('active');
-          $(this).addClass('active');
+      .click(function () {
+        $('#time-selector-btn').text($(this).text());
+        $('#time-selector [data-val]').removeClass('active');
+        $(this).addClass('active');
 
-          var offset = parseInt($(this).attr('data-val'));
-          if (!offset) {
-            that.filter.start = null;
-          } else {
-            that.filter.start =
-                new Date().getTime() + parseInt($(this).attr('data-val'));
-          }
-          that.updateUrlFromFilter(that.filter);
-          that.reset();
-          $('#time-selector').hide();
-        });
+        var offset = parseInt($(this).attr('data-val'));
+        if (!offset) {
+          that.filter.start = null;
+        } else {
+          that.filter.start =
+            new Date().getTime() + parseInt($(this).attr('data-val'));
+        }
+        that.updateUrlFromFilter(that.filter);
+        that.reset();
+        $('#time-selector').hide();
+      });
 
     $('#time-selector .custom-btn')
-        .click(() => {
-          var time = $('#time-selector .custom-in').val();
-          var d = new Date(time);
-          $('#time-selector-btn').text(d.toLocaleString());
+      .click(() => {
+        var time = $('#time-selector .custom-in').val();
+        var d = new Date(time);
+        $('#time-selector-btn').text(d.toLocaleString());
 
-          that.filter.start = d.getTime();
-          that.updateUrlFromFilter(that.filter);
-          that.reset();
-          $('#time-selector').hide();
-        })
+        that.filter.start = d.getTime();
+        that.updateUrlFromFilter(that.filter);
+        that.reset();
+        $('#time-selector').hide();
+      })
   }
 
   reset() {
@@ -109,7 +109,7 @@ class Vue {
     }
 
     this.fetching = true;
-    getEvents(start, this.filter.service, this.requestLimit, data => {
+    getEvents(start, this.filter.filter, this.requestLimit, data => {
       this.fetching = false;
       this.renderer[dir == 1 && 'appendLogs' || 'prependLogs'](data);
       if (data.length < this.requestLimit) {
@@ -128,29 +128,29 @@ class Vue {
   listenNew() {
     var that = this;
     this.ws = new WebSocket(
-        "ws://" + window.location.host + "/ws?" + this.filterToQs(this.filter));
-    this.ws.onmessage = function(evt) {
+      "ws://" + window.location.host + "/ws?" + this.filterToQs(this.filter));
+    this.ws.onmessage = function (evt) {
       var e = JSON.parse(evt.data);
       that.startTime = e.time;
       that.renderer.prependLogs([e]);
     };
 
-    this.ws.onopen = function() {
+    this.ws.onopen = function () {
       that.wsShouldReconnect = true;
       $('#status .ws').html('<i class="fas fa-check passing"></i> Live');
     };
 
-    this.ws.onclose = function() {
+    this.ws.onclose = function () {
       if (!that.wsShouldReconnect) {
         return;
       }
       $('#status .ws')
-          .html('<i class="fas fa-redo-alt fa-spin critical"></i> Disonnected');
+        .html('<i class="fas fa-redo-alt fa-spin critical"></i> Disonnected');
       that.renderer.prependMessage(
-          'ws_disconnect',
-          'Live refresh got disconnected, events might be missing');
+        'ws_disconnect',
+        'Live refresh got disconnected, events might be missing');
       that.wsReconnectTimeout =
-          setTimeout(function() { that.listenNew(); }, 2000);
+        setTimeout(function () { that.listenNew(); }, 2000);
     }
   }
 
@@ -169,7 +169,7 @@ class Vue {
     var filter = {};
 
     var searchParams = new URLSearchParams(window.location.search);
-    filter.service = searchParams.get('service');
+    filter.filter = searchParams.get('filter');
     filter.start = searchParams.get('start');
 
     return filter;
@@ -177,16 +177,16 @@ class Vue {
 
   updateUrlFromFilter(filter) {
     var newRelativePathQuery =
-        window.location.pathname + '?' + this.filterToQs(filter);
+      window.location.pathname + '?' + this.filterToQs(filter);
     history.pushState(null, '', newRelativePathQuery);
   }
 
   filterToQs(filter) {
     var searchParams = new URLSearchParams();
-    if (filter.service) {
-      searchParams.set("service", filter.service);
+    if (filter.filter) {
+      searchParams.set("filter", filter.filter);
     } else {
-      searchParams.delete("service");
+      searchParams.delete("filter");
     }
     if (filter.start) {
       searchParams.set("start", filter.start);
@@ -197,7 +197,7 @@ class Vue {
   }
 }
 
-$(function() {
+$(function () {
   new Vue($('#container'));
-  new Select($('#status .service'), (cb) => { $.getJSON("/services", cb); });
+  new Select($('#status .filter'), (cb) => { $.getJSON("/filter-entries", cb); });
 });

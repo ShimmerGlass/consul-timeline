@@ -50,17 +50,20 @@ func (w *Watcher) Run() <-chan tl.Event {
 	return w.out
 }
 
-func (w *Watcher) Services() []string {
-	services := []string{}
+func (w *Watcher) FilterEntries() []string {
+	res := []string{}
 
 	w.lock.Lock()
 	for s := range w.services {
-		services = append(services, s)
+		res = append(res, s)
+	}
+	for n := range w.nodes {
+		res = append(res, n)
 	}
 	w.lock.Unlock()
 
-	sort.Strings(services)
-	return services
+	sort.Strings(res)
+	return res
 }
 
 func (w *Watcher) watchServices() {

@@ -4,13 +4,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/aestek/consul-timeline/timeline"
+	tl "github.com/aestek/consul-timeline/timeline"
 )
 
 type Query struct {
-	Start   time.Time
-	Service string
-	Limit   int
+	Start  time.Time
+	Filter string
+	Limit  int
 }
 
 type Storage interface {

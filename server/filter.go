@@ -6,19 +6,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aestek/consul-timeline/timeline"
+	tl "github.com/aestek/consul-timeline/timeline"
 	"github.com/pkg/errors"
 )
 
 type filter struct {
-	Service string
-	Start   time.Time
-	Limit   int
+	Filter string
+	Start  time.Time
+	Limit  int
 }
 
 func filterFromQuery(q url.Values) (filter, error) {
 	f := filter{
-		Service: strings.TrimSpace(q.Get("service")),
+		Filter: strings.TrimSpace(q.Get("filter")),
 	}
 	if q.Get("start") != "" {
 		ts, err := strconv.ParseInt(q.Get("start"), 10, 64)
@@ -38,7 +38,7 @@ func filterFromQuery(q url.Values) (filter, error) {
 }
 
 func (f filter) Match(e tl.Event) bool {
-	if f.Service != "" && e.ServiceName != f.Service {
+	if f.Filter != "" && e.ServiceName != f.Filter && e.NodeName != f.Filter {
 		return false
 	}
 
