@@ -7,6 +7,5 @@
 
 # bugs
 
-* non-printable chars in check output
 * instance count should reflect healthy
 * ui resize

@@ -1,6 +1,7 @@
 package watch
 
 import (
+	"encoding/hex"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -99,13 +100,24 @@ func (w *Watcher) compareServiceStates(at time.Time, old, new []structs.CheckSer
 	}
 }
 
-func filterUnicodeChars(s string) string {
-	return strings.Map(func(r rune) rune {
-		if r == utf8.RuneError {
-			return -1
+func convertToASCII(in string) string {
+	var out strings.Builder
+
+	var i int
+	for i < len(in) {
+		r, n := utf8.DecodeRuneInString(in[i:])
+
+		if r <= utf8.RuneSelf {
+			out.WriteRune(r)
+		} else {
+			out.WriteString("\\u")
+			out.WriteString(hex.EncodeToString([]byte(in[i : i+n])))
 		}
-		return r
-	}, s)
+
+		i += n
+	}
+
+	return out.String()
 }
 
 func (w *Watcher) compareChecks(base tl.Event, old structs.HealthChecks, new structs.HealthChecks) {
@@ -136,7 +148,7 @@ func (w *Watcher) compareChecks(base tl.Event, old structs.HealthChecks, new str
 		evt.CheckName = new.Name
 		evt.OldCheckStatus = oldStatus
 		evt.NewCheckStatus = tl.StatusFromString(new.Status)
-		evt.CheckOutput = filterUnicodeChars(new.Output)
+		evt.CheckOutput = convertToASCII(new.Output)
 		w.out <- evt
 	}
 

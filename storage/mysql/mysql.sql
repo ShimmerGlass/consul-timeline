@@ -1,20 +1,20 @@
 CREATE TABLE IF NOT EXISTS events (
-    time datetime,
-    node_name varchar(255),
-    node_ip varchar(45),
-    old_node_status int,
-    new_node_status int,
-    service_name varchar(255),
-    service_id varchar(255),
-    old_service_status int,
-    new_service_status int,
-    old_instance_count int,
-    new_instance_count int,
-    check_name  varchar(255),
-    old_check_status int,
-    new_check_status int,
-    check_output varchar(2048)
-);
+    time DATETIME,
+    node_name VARCHAR(255),
+    node_ip VARCHAR(45),
+    old_node_status TINYINT,
+    new_node_status TINYINT,
+    service_name VARCHAR(255),
+    service_id VARCHAR(255),
+    old_service_status TINYINT,
+    new_service_status TINYINT,
+    old_instance_count INT,
+    new_instance_count INT,
+    check_name  VARCHAR(255),
+    old_check_status TINYINT,
+    new_check_status TINYINT,
+    check_output VARCHAR(2048)
+) CHARSET=utf8;
 
 CREATE INDEX IF NOT EXISTS time_idx ON events (`time` DESC);
 CREATE INDEX IF NOT EXISTS time_service_idx ON events (`time` DESC, `service_name`);
