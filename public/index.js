@@ -2,42 +2,10 @@
 
 function getEvents(start, service, limit, cb) {
   $.getJSON(
-    "/events?limit=" + limit + "&start=" + Math.round(start / 1000) +
-    "&service=" + (service || ''),
-    cb)
+      "/events?limit=" + limit + "&start=" + Math.round(start / 1000) +
+          "&service=" + (service || ''),
+      cb)
 }
-
-Date.prototype.toDatetimeLocal =
-  function toDatetimeLocal() {
-    var
-      date = this,
-      ten = function (i) {
-        return (i < 10 ? '0' : '') + i;
-      },
-      YYYY = date.getFullYear(),
-      MM = ten(date.getMonth() + 1),
-      DD = ten(date.getDate()),
-      HH = ten(date.getHours()),
-      II = ten(date.getMinutes()),
-      SS = ten(date.getSeconds())
-      ;
-    return YYYY + '-' + MM + '-' + DD + 'T' +
-      HH + ':' + II + ':' + SS;
-  };
-
-Date.prototype.fromDatetimeLocal = (function (BST) {
-  // BST should not be present as UTC time
-  return new Date(BST).toISOString().slice(0, 16) === BST ?
-    // if it is, it needs to be removed
-    function () {
-      return new Date(
-        this.getTime() +
-        (this.getTimezoneOffset() * 60000)
-      ).toISOString();
-    } :
-    // otherwise can just be equivalent of toISOString
-    Date.prototype.toISOString;
-}('2006-06-06T06:06'));
 
 class Vue {
   constructor(container) {
@@ -62,48 +30,49 @@ class Vue {
     var that = this;
 
     $('#status .service')
-      .change(function () {
-        var n = $(this).val();
-        if (n == that.filter.service) {
-          return;
-        }
+        .change(function() {
+          var n = $(this).val();
+          if (n == that.filter.service) {
+            return;
+          }
 
-        that.filter.service = n;
-        that.updateUrlFromFilter(that.filter);
-        that.reset();
-      });
+          that.filter.service = n;
+          that.updateUrlFromFilter(that.filter);
+          that.reset();
+        });
 
     $("#back-to-top").click(() => { this.renderer.reset(); });
 
     $('#time-selector-btn').click(() => { $('#time-selector').toggle(); });
     $('#time-selector [data-val]')
-      .click(function () {
-        $('#time-selector-btn').text($(this).text());
-        $('#time-selector [data-val]').removeClass('active');
-        $(this).addClass('active');
+        .click(function() {
+          $('#time-selector-btn').text($(this).text());
+          $('#time-selector [data-val]').removeClass('active');
+          $(this).addClass('active');
 
-        var offset = parseInt($(this).attr('data-val'));
-        if (!offset) {
-          that.filter.start = null;
-        } else {
-          that.filter.start =
-            new Date().getTime() + parseInt($(this).attr('data-val'));
-        }
-        that.updateUrlFromFilter(that.filter);
-        that.reset();
-        $('#time-selector').hide();
-      });
+          var offset = parseInt($(this).attr('data-val'));
+          if (!offset) {
+            that.filter.start = null;
+          } else {
+            that.filter.start =
+                new Date().getTime() + parseInt($(this).attr('data-val'));
+          }
+          that.updateUrlFromFilter(that.filter);
+          that.reset();
+          $('#time-selector').hide();
+        });
 
-    $('#time-selector .custom-btn').click(() => {
-      var time = $('#time-selector .custom-in').val();
-      var d = new Date(time);
-      $('#time-selector-btn').text(d.toLocaleString());
+    $('#time-selector .custom-btn')
+        .click(() => {
+          var time = $('#time-selector .custom-in').val();
+          var d = new Date(time);
+          $('#time-selector-btn').text(d.toLocaleString());
 
-      that.filter.start = d.getTime();
-      that.updateUrlFromFilter(that.filter);
-      that.reset();
-      $('#time-selector').hide();
-    })
+          that.filter.start = d.getTime();
+          that.updateUrlFromFilter(that.filter);
+          that.reset();
+          $('#time-selector').hide();
+        })
   }
 
   reset() {
@@ -159,29 +128,29 @@ class Vue {
   listenNew() {
     var that = this;
     this.ws = new WebSocket(
-      "ws://" + window.location.host + "/ws?" + this.filterToQs(this.filter));
-    this.ws.onmessage = function (evt) {
+        "ws://" + window.location.host + "/ws?" + this.filterToQs(this.filter));
+    this.ws.onmessage = function(evt) {
       var e = JSON.parse(evt.data);
       that.startTime = e.time;
       that.renderer.prependLogs([e]);
     };
 
-    this.ws.onopen = function () {
+    this.ws.onopen = function() {
       that.wsShouldReconnect = true;
       $('#status .ws').html('<i class="fas fa-check passing"></i> Live');
     };
 
-    this.ws.onclose = function () {
+    this.ws.onclose = function() {
       if (!that.wsShouldReconnect) {
         return;
       }
       $('#status .ws')
-        .html('<i class="fas fa-redo-alt fa-spin critical"></i> Disonnected');
+          .html('<i class="fas fa-redo-alt fa-spin critical"></i> Disonnected');
       that.renderer.prependMessage(
-        'ws_disconnect',
-        'Live refresh got disconnected, events might be missing');
+          'ws_disconnect',
+          'Live refresh got disconnected, events might be missing');
       that.wsReconnectTimeout =
-        setTimeout(function () { that.listenNew(); }, 2000);
+          setTimeout(function() { that.listenNew(); }, 2000);
     }
   }
 
@@ -208,7 +177,7 @@ class Vue {
 
   updateUrlFromFilter(filter) {
     var newRelativePathQuery =
-      window.location.pathname + '?' + this.filterToQs(filter);
+        window.location.pathname + '?' + this.filterToQs(filter);
     history.pushState(null, '', newRelativePathQuery);
   }
 
@@ -228,7 +197,7 @@ class Vue {
   }
 }
 
-$(function () {
+$(function() {
   new Vue($('#container'));
   new Select($('#status .service'), (cb) => { $.getJSON("/services", cb); });
 });

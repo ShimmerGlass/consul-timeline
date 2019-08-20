@@ -70,9 +70,11 @@ func main() {
 		strg = noop.New()
 	}
 
-	dstrg := storage.NewDistributed(consul, strg)
-	defer dstrg.Stop()
-	strg = dstrg
+	if cfg.Consul.EnableDistributedLock {
+		dstrg := storage.NewDistributed(consul, strg)
+		defer dstrg.Stop()
+		strg = dstrg
+	}
 
 	// consul watch
 	w := watch.New(consul, eventsBuffer)

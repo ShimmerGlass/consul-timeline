@@ -23,5 +23,5 @@ func (s *Storage) Store(evt tl.Event) error {
 }
 
 func (s *Storage) Query(_ context.Context, q storage.Query) ([]tl.Event, error) {
-	return nil, nil
+	return []tl.Event{}, nil
 }

@@ -1,3 +1,7 @@
+/*
+ * colors :
+ *  * background: #f2fcff
+ */
 * {
     box-sizing: border-box;
 }
@@ -12,8 +16,8 @@ body {
     padding: 0;
     height: 100%;
     font-family: 'Roboto', sans-serif;
-    background: #000a0c;
-    color: #cfcfcf;
+    background: #f3f3f3;
+    color: #131313;
 }
 
 .passing {
@@ -36,7 +40,8 @@ body {
     height: 40px;
     font-size: .8em;
     padding-right: 5px;
-    background: #002227;
+    background: #834d68;
+    color: #eee;
 }
 
 #status .right {
@@ -51,13 +56,13 @@ body {
 }
 
 #status input[type="text"] {
-    background: #002227;
+    background: #834d68;
     color: #cfcfcf;
-    border: 1px solid #00323a;
+    border: 1px solid #693f54;
 }
 
 #status input[type="text"]::placeholder {
-    color: #64faff;
+    color: #fcb8d4;
 }
 
 #status input.service {
@@ -78,11 +83,11 @@ body {
 }
 
 #time-selector-btn {
-    color: #64faff;
+    color: #fcb8d4;
     background: transparent;
     margin: 0 10px;
-    border-left: 1px solid #00323a;
-    border-right: 1px solid #00323a;
+    border-left: 1px solid #693f54;
+    border-right: 1px solid #693f54;
     border-top: 0;
     border-bottom: 0;
     height: 40px;
@@ -96,8 +101,9 @@ body {
     right: 0;
     width: 400px;
     padding: 1px 10px;
-    background: #002227;
-    border-top: 1px solid #00323a;
+    background: #834d68;
+    border-top: 1px solid #693f54;
+    color: #eee;
     display: none;
 }
 
@@ -111,7 +117,7 @@ body {
     padding: 0 10px;
     height: 40px;
     line-height: 40px;
-    border-bottom: 1px solid #00323a;
+    border-bottom: 1px solid #693f54;
     font-size: .8em;
 }
 
@@ -120,7 +126,7 @@ body {
 }
 
 #time-selector ul li.active {
-    color: #64faff;
+    color: #fcb8d4;
 }
 
 #time-selector ul li.custom button {
@@ -128,17 +134,17 @@ body {
     margin: 0;
     background: transparent;
     border-width: 0;
-    border-left-color: #00323a;
+    border-left-color: #693f54;
     height: 100%;
     color: white;
 }
 
-#time-selector ul li.data-val {
+#time-selector ul li[data-val] {
     cursor: pointer;
 }
 
 #header {
-    background: #00323a;
+    background: #a58d99;
     font-size: .8em;
     font-weight: bold;
     white-space: nowrap;
@@ -161,7 +167,7 @@ body {
     left: 25%;
     height: 30px;
     line-height: 30px;
-    background: #002227;
+    background: #834d68;
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
     text-align: center;
@@ -188,20 +194,20 @@ body {
 
 #container .row.message {
     text-align: center;
-    background: #060b0e;
+    background: #b9b9b9;
 }
 
 #container .row.even {
-    background: #000a0c;
+    background: #f3f3f3;
 }
 
 #container .row.odd {
-    background: #001013;
+    background: #eeeeee;
 }
 
 #container .row:hover {
-    border-top: 1px solid #00323a;
-    border-bottom: 1px solid #00323a;
+    border-top: 1px solid #693f54;
+    border-bottom: 1px solid #693f54;
 }
 
 #container .row>*,
@@ -247,7 +253,7 @@ body {
 
 .select-dd {
     position: fixed;
-    background: #002227;
+    background: #834d68;
     margin: 0;
     padding: 0;
     list-style-type: none;
@@ -257,23 +263,24 @@ body {
     padding: 0 10px;
     height: 40px;
     line-height: 40px;
-    border-top: 1px solid #00323a;
+    border-top: 1px solid #693f54;
     font-size: .8em;
     cursor: pointer;
 }
 
 .select-dd li.selected {
-    background: #00323a;
-    color: #64faff;
+    background: #693f54;
+    color: #fcb8d4;
 }
 
 #details-pane {
     position: absolute;
+    color: white;
     top: 80px;
     bottom: 0;
     right: 0;
     width: 40%;
-    background : #002227;
+    background : #967083;
     padding: 10px;
     display: none;
     overflow: auto;

@@ -9,7 +9,7 @@ import (
 	"github.com/aestek/consul-timeline/consul"
 	tl "github.com/aestek/consul-timeline/timeline"
 	"github.com/hashicorp/consul/api"
-	"github.com/prometheus/common/log"
+	log "github.com/sirupsen/logrus"
 )
 
 var _ Storage = (*Distributed)(nil)
