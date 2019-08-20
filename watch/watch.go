@@ -15,24 +15,13 @@ const (
 	waitOnErr = 5 * time.Second
 )
 
-type serviceWatch struct {
-	Stop  uint32
-	State []structs.CheckServiceNode
-}
-
-type nodeWatch struct {
-	Stop   uint32
-	Node   *structs.Node
-	Checks structs.HealthChecks
-}
-
 type Watcher struct {
 	c consul
 
 	lock sync.Mutex
 
-	services map[string]*serviceWatch
-	nodes    map[string]*nodeWatch
+	services map[string]*uint32
+	nodes    map[string]*uint32
 
 	ready   bool
 	readyWg sync.WaitGroup
@@ -44,8 +33,8 @@ type Watcher struct {
 func New(c consul, bufferSize int) *Watcher {
 	return &Watcher{
 		c:        c,
-		services: make(map[string]*serviceWatch),
-		nodes:    make(map[string]*nodeWatch),
+		services: make(map[string]*uint32),
+		nodes:    make(map[string]*uint32),
 		out:      make(chan tl.Event, bufferSize),
 	}
 }
@@ -105,7 +94,7 @@ func (w *Watcher) handleServicesChanged(services map[string][]string) {
 
 	for s := range services {
 		if _, ok := w.services[s]; ok {
-			atomic.StoreUint32(&w.services[s].Stop, 0)
+			atomic.StoreUint32(w.services[s], 0)
 			continue
 		}
 
@@ -114,7 +103,7 @@ func (w *Watcher) handleServicesChanged(services map[string][]string) {
 
 	for s := range w.services {
 		if _, ok := services[s]; !ok {
-			atomic.StoreUint32(&w.services[s].Stop, 1)
+			atomic.StoreUint32(w.services[s], 1)
 		}
 	}
 }
@@ -122,22 +111,19 @@ func (w *Watcher) handleServicesChanged(services map[string][]string) {
 func (w *Watcher) watchService(name string) {
 	log.Debugf("watching service %s", name)
 
-	state := &serviceWatch{}
-	w.services[name] = state
+	stop := uint32(0)
+	w.services[name] = &stop
 
+	var lastState structs.CheckServiceNodes
 	go func() {
 		var idx uint64
 
 		for {
-			if idx > 0 {
-				w.readyWg.Wait()
-			}
-
-			if atomic.LoadUint32(&state.Stop) == 1 {
+			if atomic.LoadUint32(&stop) == 1 {
 				w.lock.Lock()
 				delete(w.services, name)
 				w.lock.Unlock()
-				log.Debugf("stopping watching service %s", name)
+				log.Debugf("stopped watching service %s", name)
 				return
 			}
 
@@ -150,28 +136,21 @@ func (w *Watcher) watchService(name string) {
 			}
 
 			if idx == 0 && !w.ready {
+				log.Debugf("service %s ready", name)
 				w.readyWg.Done()
 			}
 
 			w.lock.Lock()
-			if w.ready {
-				w.handleServiceChanged(name, time.Now().UTC(), res.Nodes)
+			if idx > 0 && w.ready {
+				w.compareServiceStates(time.Now().UTC(), lastState, res.Nodes)
 			}
-			w.services[name].State = res.Nodes
+
+			lastState = res.Nodes
 			w.lock.Unlock()
 
 			idx = res.Index
 		}
 	}()
-}
-
-func (w *Watcher) handleServiceChanged(name string, at time.Time, state []structs.CheckServiceNode) {
-	if _, ok := w.services[name]; !ok {
-		log.Printf("no entry for %s", name)
-		return
-	}
-
-	w.compareServiceStates(at, w.services[name].State, state)
 }
 
 func (w *Watcher) watchNodes() {
@@ -210,8 +189,7 @@ func (w *Watcher) handleNodesChanged(nodes []*structs.Node) {
 
 	for n, node := range new {
 		if _, ok := w.nodes[n]; ok {
-			w.nodes[n].Node = node
-			atomic.StoreUint32(&w.nodes[n].Stop, 0)
+			atomic.StoreUint32(w.nodes[n], 0)
 			continue
 		}
 
@@ -220,7 +198,7 @@ func (w *Watcher) handleNodesChanged(nodes []*structs.Node) {
 
 	for n := range w.nodes {
 		if _, ok := new[n]; !ok {
-			atomic.StoreUint32(&w.nodes[n].Stop, 1)
+			atomic.StoreUint32(w.nodes[n], 1)
 		}
 	}
 }
@@ -228,8 +206,10 @@ func (w *Watcher) handleNodesChanged(nodes []*structs.Node) {
 func (w *Watcher) watchNode(node *structs.Node) {
 	log.Debugf("watching node %s", node.Node)
 
-	state := &nodeWatch{Node: node}
-	w.nodes[node.Node] = state
+	stop := uint32(0)
+	w.nodes[node.Node] = &stop
+
+	var lastState structs.HealthChecks
 
 	go func() {
 		var idx uint64
@@ -239,11 +219,11 @@ func (w *Watcher) watchNode(node *structs.Node) {
 				w.readyWg.Wait()
 			}
 
-			if atomic.LoadUint32(&state.Stop) == 1 {
+			if atomic.LoadUint32(&stop) == 1 {
 				w.lock.Lock()
 				delete(w.nodes, node.Node)
 				w.lock.Unlock()
-				log.Debugf("stopping watching node %s", node.Node)
+				log.Debugf("stopped watching node %s", node.Node)
 				return
 			}
 
@@ -263,14 +243,15 @@ func (w *Watcher) watchNode(node *structs.Node) {
 			}
 
 			if idx == 0 && !w.ready {
+				log.Debugf("node %s ready", node.Node)
 				w.readyWg.Done()
 			}
 
 			w.lock.Lock()
-			if w.ready {
-				w.handleNodeChanged(node.Node, time.Now().UTC(), filteredChecks)
+			if idx > 0 && w.ready {
+				w.handleNodeChanged(node, time.Now().UTC(), lastState, filteredChecks)
 			}
-			state.Checks = filteredChecks
+			lastState = filteredChecks
 			w.lock.Unlock()
 
 			idx = res.Index
@@ -278,32 +259,25 @@ func (w *Watcher) watchNode(node *structs.Node) {
 	}()
 }
 
-func (w *Watcher) handleNodeChanged(name string, at time.Time, checks structs.HealthChecks) {
-	if _, ok := w.nodes[name]; !ok {
-		log.Printf("no entry for %s", name)
-		return
-	}
-
-	state := w.nodes[name]
-
+func (w *Watcher) handleNodeChanged(node *structs.Node, at time.Time, old, new structs.HealthChecks) {
 	oldStatus, newStatus := tl.StatusMissing, tl.StatusMissing
 
-	if len(state.Checks) > 0 {
-		oldStatus = aggregatedStatus(state.Checks)
+	if len(old) > 0 {
+		oldStatus = aggregatedStatus(old)
 	}
-	if len(checks) > 0 {
-		newStatus = aggregatedStatus(checks)
+	if len(new) > 0 {
+		newStatus = aggregatedStatus(new)
 	}
 
 	base := tl.Event{
 		Time:          at,
-		NodeName:      state.Node.Node,
-		NodeIP:        state.Node.Address,
+		NodeName:      node.Node,
+		NodeIP:        node.Address,
 		OldNodeStatus: oldStatus,
 		NewNodeStatus: newStatus,
 	}
 
-	w.compareChecks(base, state.Checks, checks)
+	w.compareChecks(base, old, new)
 }
 
 func (w *Watcher) nextEventID() int32 {

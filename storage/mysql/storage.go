@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/aestek/consul-timeline/storage"
-	"github.com/aestek/consul-timeline/timeline"
+	tl "github.com/aestek/consul-timeline/timeline"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pkg/errors"
 )
