@@ -12,6 +12,9 @@ type Config struct {
 	User     string `json:"user"`
 	Password string `json:"password"`
 	Database string `json:"database"`
+
+	PurgeFrequency   int `json:"purge_frequency"`
+	PurgeMaxAgeHours int `json:"purge_max_age_hours"`
 }
 
 var flagConfig Config
@@ -22,6 +25,9 @@ func init() {
 	flag.StringVar(&flagConfig.User, "mysql-user", "root", "MySQL user")
 	flag.StringVar(&flagConfig.Password, "mysql-password", "", "MySQL server password")
 	flag.StringVar(&flagConfig.Database, "mysql-db", "consul_timeline", "MySQL database name")
+
+	flag.IntVar(&flagConfig.PurgeMaxAgeHours, "mysql-purge-max-age-hours", 2*7*24, "Periodically delete events older than this duration")
+	flag.IntVar(&flagConfig.PurgeFrequency, "mysql-purge-frequency", 10000, "Purge events every n writes")
 }
 
 func ConfigFromFlags() Config {

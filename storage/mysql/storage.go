@@ -4,17 +4,22 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/aestek/consul-timeline/storage"
 	tl "github.com/aestek/consul-timeline/timeline"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 var _ storage.Storage = (*Storage)(nil)
 
 type Storage struct {
-	db *sql.DB
+	cfg Config
+	db  *sql.DB
+
+	purgeCounter int
 }
 
 func New(cfg Config) (*Storage, error) {
@@ -33,7 +38,10 @@ func New(cfg Config) (*Storage, error) {
 		return nil, err
 	}
 
-	return &Storage{db}, nil
+	return &Storage{
+		cfg: cfg,
+		db:  db,
+	}, nil
 }
 
 func (s *Storage) Store(evt tl.Event) error {
@@ -79,7 +87,13 @@ func (s *Storage) Store(evt tl.Event) error {
 		evt.NewCheckStatus,
 		evt.CheckOutput,
 	)
-	return errors.Wrap(err, "mysql event insert")
+	if err != nil {
+		return errors.Wrap(err, "mysql event insert")
+	}
+
+	s.purgeIfNeeded()
+
+	return nil
 }
 
 func (s *Storage) Query(ctx context.Context, q storage.Query) ([]tl.Event, error) {
@@ -146,4 +160,35 @@ func (s *Storage) Query(ctx context.Context, q storage.Query) ([]tl.Event, error
 	}
 
 	return res, nil
+}
+
+func (s *Storage) purgeIfNeeded() {
+	if s.cfg.PurgeFrequency == 0 || s.cfg.PurgeMaxAgeHours == 0 {
+		return
+	}
+
+	s.purgeCounter++
+	if s.purgeCounter < s.cfg.PurgeFrequency {
+		return
+	}
+
+	start := time.Now()
+
+	res, err := s.db.Exec(`
+		DELETE FROM events
+		WHERE time < ?
+	`, time.Now().Add(-time.Duration(s.cfg.PurgeMaxAgeHours)*time.Hour))
+	if err != nil {
+		log.Errorf("mysql: error purging: %s", err)
+		return
+	}
+
+	s.purgeCounter = 0
+
+	affected, err := res.RowsAffected()
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	log.Infof("mysql: purged %d events in %s", affected, time.Since(start))
 }
