@@ -1,11 +1,9 @@
 # feats
 
 * ui loader
-* filters
 * metrics
 * do not ignore context in cass storage
 
 # bugs
 
-* instance count should reflect healthy
 * ui resize

@@ -20,13 +20,16 @@ func (w *Watcher) compareServiceStates(at time.Time, old, new []structs.CheckSer
 		node        string
 	}
 
-	oldInstanceCount := len(old)
-	newInstanceCount := len(new)
+	oldInstanceCount := 0
+	newInstanceCount := 0
 
 	oldIdx := map[key]structs.CheckServiceNode{}
 	newIdx := map[key]structs.CheckServiceNode{}
 
 	for _, v := range old {
+		if aggregatedStatus(v.Checks) == tl.StatusPassing {
+			oldInstanceCount++
+		}
 		oldIdx[key{
 			serviceName: v.Service.Service,
 			serviceID:   v.Service.ID,
@@ -35,6 +38,9 @@ func (w *Watcher) compareServiceStates(at time.Time, old, new []structs.CheckSer
 	}
 
 	for _, v := range new {
+		if aggregatedStatus(v.Checks) == tl.StatusPassing {
+			newInstanceCount++
+		}
 		newIdx[key{
 			serviceName: v.Service.Service,
 			serviceID:   v.Service.ID,
