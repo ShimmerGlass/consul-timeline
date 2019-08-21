@@ -55,6 +55,18 @@ body {
     text-align: center;
 }
 
+#status .loader {
+    line-height: 40px;
+    height: 40px;
+    text-align: center;
+    padding: 0 5px;
+}
+
+#status #loader i {
+    line-height: 40px;
+    font-size: 1.2em;
+}
+
 #status input[type="text"] {
     background: #834d68;
     color: #cfcfcf;
@@ -275,6 +287,7 @@ body {
 }
 
 #details-pane {
+    z-index: 2;
     position: absolute;
     color: white;
     top: 80px;

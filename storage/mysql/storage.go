@@ -19,6 +19,8 @@ type Storage struct {
 	cfg Config
 	db  *sql.DB
 
+	insertStmt *sql.Stmt
+
 	purgeCounter int
 }
 
@@ -38,39 +40,66 @@ func New(cfg Config) (*Storage, error) {
 		return nil, err
 	}
 
-	return &Storage{
-		cfg: cfg,
-		db:  db,
-	}, nil
+	insertStmt, err := db.Prepare(`
+		INSERT INTO events (
+			time,
+			node_name,
+			node_ip,
+			old_node_status,
+			new_node_status,
+			service_name,
+			service_id,
+			old_service_status,
+			new_service_status,
+			old_instance_count,
+			new_instance_count,
+			check_name,
+			old_check_status,
+			new_check_status,
+			check_output
+		) VALUES (
+			?, ?, ?, ?, ?, ?, ?, ?,
+			?, ?, ?, ?, ?, ?, ?
+		)
+	`)
+	if err != nil {
+		return nil, err
+	}
+
+	s := &Storage{
+		insertStmt: insertStmt,
+		cfg:        cfg,
+		db:         db,
+	}
+
+	if cfg.SetupSchema {
+		err := s.setup()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return s, nil
+}
+
+func (s *Storage) setup() error {
+	log.Info("mysql: setting up schema")
+	for _, q := range Schema {
+		_, err := s.db.Exec(q)
+		if err != nil {
+			return err
+		}
+	}
+	log.Info("mysql: schema setup")
+
+	return nil
 }
 
 func (s *Storage) Store(evt tl.Event) error {
 	if len(evt.CheckOutput) > 2048 {
 		evt.CheckOutput = evt.CheckOutput[:2048]
 	}
-	_, err := s.db.Exec(
-		`
-			INSERT INTO events (
-				time,
-				node_name,
-				node_ip,
-				old_node_status,
-				new_node_status,
-				service_name,
-				service_id,
-				old_service_status,
-				new_service_status,
-				old_instance_count,
-				new_instance_count,
-				check_name,
-				old_check_status,
-				new_check_status,
-				check_output
-			) VALUES (
-				?, ?, ?, ?, ?, ?, ?, ?,
-				?, ?, ?, ?, ?, ?, ?
-			)
-		`,
+	_, err := s.insertStmt.Exec(
 		evt.Time,
 		evt.NodeName,
 		evt.NodeIP,

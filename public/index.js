@@ -1,5 +1,9 @@
 'use strict';
 
+$(document).ajaxStart(() => { $("#loader").show() });
+$(document).ajaxStop(() => { $("#loader").hide() });
+ 
+
 function getEvents(start, filter, limit, cb) {
   $.getJSON(
     "/events?limit=" + limit + "&start=" + Math.round(start / 1000) +

@@ -15,11 +15,17 @@ type Config struct {
 
 	PurgeFrequency   int `json:"purge_frequency"`
 	PurgeMaxAgeHours int `json:"purge_max_age_hours"`
+
+	SetupSchema bool `json:"setup_schema"`
+	PrintSchema bool `json:"-"`
 }
 
 var flagConfig Config
 
 func init() {
+	flag.BoolVar(&flagConfig.SetupSchema, "mysql-setup-schema", false, "Automatically setup MySQL schema")
+	flag.BoolVar(&flagConfig.PrintSchema, "mysql-print-schema", false, "Print MySQL schema")
+
 	flag.StringVar(&flagConfig.Host, "mysql-host", "localhost", "MySQL server host")
 	flag.IntVar(&flagConfig.Port, "mysql-port", 3306, "MySQL server port")
 	flag.StringVar(&flagConfig.User, "mysql-user", "root", "MySQL user")

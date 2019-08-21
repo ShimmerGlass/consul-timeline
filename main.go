@@ -39,6 +39,11 @@ func dupEvents(in <-chan tl.Event) (<-chan tl.Event, <-chan tl.Event) {
 func main() {
 	cfg := GetConfig()
 
+	if cfg.Mysql.PrintSchema {
+		mysql.PrintSchema()
+		return
+	}
+
 	logLvl, err := log.ParseLevel(cfg.LogLevel)
 	if err != nil {
 		log.Fatal(err)

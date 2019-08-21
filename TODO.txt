@@ -1,9 +1,0 @@
-# feats
-
-* ui loader
-* metrics
-* do not ignore context in cass storage
-
-# bugs
-
-* ui resize
