@@ -70,6 +70,38 @@ server:
   listen: :8888
 ```
 
+### Full config reference
+
+Values are default
+
+```yaml
+log_level: info
+storage: noop
+
+server:
+  listen: :8888
+
+consul:
+  address: localhost:8500
+  enable_distributed_lock: false
+  lock_path: consul_timeline/lock
+  token: ""
+
+mysql:
+  host: localhost
+  port: 3306
+  user: ""
+  password: ""
+  database: consul_timeline
+  purge_frequency: 10000
+  purge_max_age_hours: 336 # 2 weeks
+  setup_schema: false
+
+cassandra:
+  Addresses: []
+  Keyspace: consul_timeline
+
+```
 
 ## Contributing
 

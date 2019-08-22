@@ -8,13 +8,17 @@ import (
 const Name = "cassandra"
 
 type Config struct {
-	Addresses []string
-	Keyspace  string
+	Addresses []string `json:"addresses"`
+	Keyspace  string   `json:"keyspace"`
+}
+
+var DefaultConfig = Config{
+	Keyspace: "consul_timeline",
 }
 
 var (
-	addr     = flag.String("cassandra", "", "Cassandra addresses, comma separated")
-	keyspace = flag.String("cassandra-keyspace", "consul_timeline", "Cassandra keyspace")
+	addr     = flag.String("cassandra", strings.Join(DefaultConfig.Addresses, ", "), "Cassandra addresses, comma separated")
+	keyspace = flag.String("cassandra-keyspace", DefaultConfig.Keyspace, "Cassandra keyspace")
 )
 
 func ConfigFromFlags() Config {
