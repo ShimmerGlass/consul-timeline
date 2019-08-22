@@ -21,7 +21,7 @@ var flagConfig Config
 func init() {
 	flag.StringVar(&flagConfig.Address, "consul", DefaultConfig.Address, "Consul agent address")
 	flag.StringVar(&flagConfig.Token, "consul-token", DefaultConfig.Token, "Consul ACL token")
-	flag.BoolVar(&flagConfig.EnableDistributedLock, "consul-enable-distributed-lcok", DefaultConfig.EnableDistributedLock, "Multi timeline instance lock for storage")
+	flag.BoolVar(&flagConfig.EnableDistributedLock, "consul-enable-distributed-lock", DefaultConfig.EnableDistributedLock, "Multi timeline instance lock for storage")
 	flag.StringVar(&flagConfig.LockPath, "consul-lock-path", DefaultConfig.LockPath, "Consul lock path")
 }
 
