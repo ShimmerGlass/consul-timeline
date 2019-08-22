@@ -173,6 +173,10 @@ body {
     height: calc(100% - 80px);
 }
 
+#container.small {
+    height: calc(70% - 80px);
+}
+
 #back-to-top {
     position: fixed;
     width: 50%;
@@ -290,14 +294,19 @@ body {
     z-index: 2;
     position: absolute;
     color: white;
-    top: 80px;
+    top: calc(70% - 40px);
     bottom: 0;
     right: 0;
-    width: 40%;
+    left: 0;
     background : #967083;
     padding: 10px;
     display: none;
     overflow: auto;
+}
+
+#details-pane .close {
+    float: right;
+    cursor: pointer;
 }
 
 #details-pane .key {
