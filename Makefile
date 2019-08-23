@@ -1,6 +1,6 @@
 GOOS ?= linux
 GOARCH ?= amd64
-OUT ?= consul_timeline
+OUT ?= consul-timeline
 
 deps:
 	go get github.com/rakyll/statik

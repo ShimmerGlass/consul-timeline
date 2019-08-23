@@ -2,7 +2,7 @@
 
 $(document).ajaxStart(() => { $("#loader").show() });
 $(document).ajaxStop(() => { $("#loader").hide() });
- 
+
 
 function getEvents(start, filter, limit, cb) {
   $.getJSON(
@@ -131,8 +131,9 @@ class Vue {
 
   listenNew() {
     var that = this;
+    var scheme = window.location.protocol == 'https:' ? 'wss' : 'ws';
     this.ws = new WebSocket(
-      "ws://" + window.location.host + "/ws?" + this.filterToQs(this.filter));
+      scheme + "://" + window.location.host + "/ws?" + this.filterToQs(this.filter));
     this.ws.onmessage = function (evt) {
       var e = JSON.parse(evt.data);
       that.startTime = e.time;
