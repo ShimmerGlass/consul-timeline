@@ -52,6 +52,10 @@ func (s *Storage) Query(_ context.Context, q storage.Query) ([]tl.Event, error) 
 		}
 
 		res = append(res, evt)
+
+		if len(res) >= q.Limit {
+			break
+		}
 	}
 
 	return res, nil
