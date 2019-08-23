@@ -10,7 +10,7 @@ Here are some config examples for common usages
 
 ### Basic
 
-This will run the server on 0.0.0.0:8888 with no storage, for demonstration purpose.
+This will run the server on 0.0.0.0:8888 with memory storage, for demonstration purpose.
 
 ```yaml
 consul:
@@ -76,7 +76,7 @@ Values are default
 
 ```yaml
 log_level: info
-storage: noop
+storage: memory
 
 server:
   listen: :8888
@@ -86,6 +86,9 @@ consul:
   enable_distributed_lock: false
   lock_path: consul_timeline/lock
   token: ""
+
+memory:
+  max_size: 10000
 
 mysql:
   host: localhost
@@ -109,6 +112,7 @@ cassandra:
 
 * Cassandra storage
   * Node filter
+  * Table max size
 
 * Handle server errors in UI
 

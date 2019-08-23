@@ -12,8 +12,8 @@ import (
 
 	"github.com/aestek/consul-timeline/server"
 	cass "github.com/aestek/consul-timeline/storage/cassandra"
+	"github.com/aestek/consul-timeline/storage/memory"
 	"github.com/aestek/consul-timeline/storage/mysql"
-	"github.com/aestek/consul-timeline/storage/noop"
 	tl "github.com/aestek/consul-timeline/timeline"
 	"github.com/aestek/consul-timeline/watch"
 	log "github.com/sirupsen/logrus"
@@ -68,11 +68,11 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-	case noop.Name:
+	case memory.Name:
 		fallthrough
 	default:
-		log.Warn("using noop storage (events will be dropped)")
-		strg = noop.New()
+		log.Warnf("storing up to %d events in memory", cfg.Memory.MaxSize)
+		strg = memory.New(cfg.Memory)
 	}
 
 	if cfg.Consul.EnableDistributedLock {

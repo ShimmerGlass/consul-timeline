@@ -12,8 +12,8 @@ import (
 	"github.com/aestek/consul-timeline/consul"
 	"github.com/aestek/consul-timeline/server"
 	cass "github.com/aestek/consul-timeline/storage/cassandra"
+	"github.com/aestek/consul-timeline/storage/memory"
 	"github.com/aestek/consul-timeline/storage/mysql"
-	"github.com/aestek/consul-timeline/storage/noop"
 )
 
 type Config struct {
@@ -23,17 +23,18 @@ type Config struct {
 	Server    server.Config `json:"server"`
 	Mysql     mysql.Config  `json:"mysql"`
 	Cassandra cass.Config   `json:"cassandra"`
+	Memory    memory.Config `json:"memory"`
 }
 
 var DefaultConfig = Config{
 	LogLevel: "info",
-	Storage:  noop.Name,
+	Storage:  memory.Name,
 }
 
 var (
 	logLevelFlag    = flag.String("log-level", DefaultConfig.LogLevel, "(debug, info, warning, error, fatal)")
 	configFileFlag  = flag.String("config", "", "Config file path (yaml, json)")
-	storageFlag     = flag.String("storage", DefaultConfig.Storage, "Storage backend (mysql, cassandra)")
+	storageFlag     = flag.String("storage", DefaultConfig.Storage, "Storage backend (mysql, cassandra, memory)")
 	printConfigFlag = flag.Bool("print-config", false, "Print the configuration")
 )
 
@@ -45,6 +46,7 @@ func FromFlags() Config {
 		Server:    server.ConfigFromFlags(),
 		Mysql:     mysql.ConfigFromFlags(),
 		Cassandra: cass.ConfigFromFlags(),
+		Memory:    memory.ConfigFromFlags(),
 	}
 
 	return cfg
@@ -58,6 +60,7 @@ func GetConfig() Config {
 	cfg.Server = server.DefaultConfig
 	cfg.Mysql = mysql.DefaultConfig
 	cfg.Cassandra = cass.DefaultConfig
+	cfg.Memory = memory.DefaultConfig
 
 	if *configFileFlag != "" {
 		f, err := ioutil.ReadFile(*configFileFlag)
