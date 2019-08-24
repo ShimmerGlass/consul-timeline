@@ -294,7 +294,7 @@ body {
     z-index: 2;
     position: absolute;
     color: white;
-    top: calc(70% - 40px);
+    top: 70%;
     bottom: 0;
     right: 0;
     left: 0;

@@ -117,4 +117,3 @@ cassandra:
 * Handle server errors in UI
 
 * Metrics
-* Handle UI resize
