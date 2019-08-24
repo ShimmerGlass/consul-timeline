@@ -1,15 +1,7 @@
 'use strict';
 
-$(document).ajaxStart(() => { $("#loader").show() });
-$(document).ajaxStop(() => { $("#loader").hide() });
-
-
-function getEvents(start, filter, limit, cb) {
-  $.getJSON(
-    "/events?limit=" + limit + "&start=" + Math.round(start / 1000) +
-    "&filter=" + (filter || ''),
-    cb)
-}
+$(document).ajaxStart(() => {$("#loader").show()});
+$(document).ajaxStop(() => {$("#loader").hide()});
 
 class Vue {
   constructor(container) {
@@ -34,49 +26,49 @@ class Vue {
     var that = this;
 
     $('#status .filter')
-      .change(function () {
-        var n = $(this).val();
-        if (n == that.filter.filter) {
-          return;
-        }
+        .change(function() {
+          var n = $(this).val();
+          if (n == that.filter.filter) {
+            return;
+          }
 
-        that.filter.filter = n;
-        that.updateUrlFromFilter(that.filter);
-        that.reset();
-      });
+          that.filter.filter = n;
+          that.updateUrlFromFilter(that.filter);
+          that.reset();
+        });
 
     $("#back-to-top").click(() => { this.renderer.reset(); });
 
     $('#time-selector-btn').click(() => { $('#time-selector').toggle(); });
     $('#time-selector [data-val]')
-      .click(function () {
-        $('#time-selector-btn').text($(this).text());
-        $('#time-selector [data-val]').removeClass('active');
-        $(this).addClass('active');
+        .click(function() {
+          $('#time-selector-btn').text($(this).text());
+          $('#time-selector [data-val]').removeClass('active');
+          $(this).addClass('active');
 
-        var offset = parseInt($(this).attr('data-val'));
-        if (!offset) {
-          that.filter.start = null;
-        } else {
-          that.filter.start =
-            new Date().getTime() + parseInt($(this).attr('data-val'));
-        }
-        that.updateUrlFromFilter(that.filter);
-        that.reset();
-        $('#time-selector').hide();
-      });
+          var offset = parseInt($(this).attr('data-val'));
+          if (!offset) {
+            that.filter.start = null;
+          } else {
+            that.filter.start =
+                new Date().getTime() + parseInt($(this).attr('data-val'));
+          }
+          that.updateUrlFromFilter(that.filter);
+          that.reset();
+          $('#time-selector').hide();
+        });
 
     $('#time-selector .custom-btn')
-      .click(() => {
-        var time = $('#time-selector .custom-in').val();
-        var d = new Date(time);
-        $('#time-selector-btn').text(d.toLocaleString());
+        .click(() => {
+          var time = $('#time-selector .custom-in').val();
+          var d = new Date(time);
+          $('#time-selector-btn').text(d.toLocaleString());
 
-        that.filter.start = d.getTime();
-        that.updateUrlFromFilter(that.filter);
-        that.reset();
-        $('#time-selector').hide();
-      })
+          that.filter.start = d.getTime();
+          that.updateUrlFromFilter(that.filter);
+          that.reset();
+          $('#time-selector').hide();
+        })
   }
 
   reset() {
@@ -113,7 +105,7 @@ class Vue {
     }
 
     this.fetching = true;
-    getEvents(start, this.filter.filter, this.requestLimit, data => {
+    this.getEvents(start, this.filter.filter, this.requestLimit, data => {
       this.fetching = false;
       this.renderer[dir == 1 && 'appendLogs' || 'prependLogs'](data);
       if (data.length < this.requestLimit) {
@@ -129,33 +121,51 @@ class Vue {
     });
   }
 
+  getEvents(start, filter, limit, cb) {
+    var url = "/events?limit=" + limit + "&start=" + Math.round(start / 1000) +
+        "&filter=" + (filter || '');
+
+    $.ajax({
+      dataType: "json",
+      url: url,
+      success: cb,
+      error: (e) => {
+        this.displayError(
+            'Error fetching events, server responded with ' + e.statusText +
+            ', status code ' + e.statusCode);
+        cb([]);
+      }
+    });
+  }
+
   listenNew() {
     var that = this;
     var scheme = window.location.protocol == 'https:' ? 'wss' : 'ws';
     this.ws = new WebSocket(
-      scheme + "://" + window.location.host + "/ws?" + this.filterToQs(this.filter));
-    this.ws.onmessage = function (evt) {
+        scheme + "://" + window.location.host + "/ws?" +
+        this.filterToQs(this.filter));
+    this.ws.onmessage = function(evt) {
       var e = JSON.parse(evt.data);
       that.startTime = e.time;
       that.renderer.prependLogs([e]);
     };
 
-    this.ws.onopen = function () {
+    this.ws.onopen = function() {
       that.wsShouldReconnect = true;
       $('#status .ws').html('<i class="fas fa-check passing"></i> Live');
     };
 
-    this.ws.onclose = function () {
+    this.ws.onclose = function() {
       if (!that.wsShouldReconnect) {
         return;
       }
       $('#status .ws')
-        .html('<i class="fas fa-redo-alt fa-spin critical"></i> Disonnected');
+          .html('<i class="fas fa-redo-alt fa-spin critical"></i> Disonnected');
       that.renderer.prependMessage(
-        'ws_disconnect',
-        'Live refresh got disconnected, events might be missing');
+          'ws_disconnect',
+          'Live refresh got disconnected, events might be missing');
       that.wsReconnectTimeout =
-        setTimeout(function () { that.listenNew(); }, 2000);
+          setTimeout(function() { that.listenNew(); }, 2000);
     }
   }
 
@@ -182,7 +192,7 @@ class Vue {
 
   updateUrlFromFilter(filter) {
     var newRelativePathQuery =
-      window.location.pathname + '?' + this.filterToQs(filter);
+        window.location.pathname + '?' + this.filterToQs(filter);
     history.pushState(null, '', newRelativePathQuery);
   }
 
@@ -200,9 +210,21 @@ class Vue {
     }
     return searchParams.toString();
   }
+
+  displayError(message) {
+    var el = $('<div>');
+    el.text(message);
+
+    var close = () => { el.fadeOut(300, () => { el.remove(); }) };
+
+    el.appendTo($('#errors'));
+    el.click(close);
+    setTimeout(close, 30000);
+  }
 }
 
-$(function () {
+$(function() {
   new Vue($('#container'));
-  new Select($('#status .filter'), (cb) => { $.getJSON("/filter-entries", cb); });
+  new Select(
+      $('#status .filter'), (cb) => { $.getJSON("/filter-entries", cb); });
 });

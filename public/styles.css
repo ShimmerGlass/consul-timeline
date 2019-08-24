@@ -318,3 +318,17 @@ body {
 #details-pane li {
     margin-bottom: 5px;
 }
+
+#errors {
+    position: absolute;
+    top: 100px;
+    right: 20px;
+    width: 300px;
+}
+
+#errors > div {
+    padding: 10px;
+    background: #88002c;
+    color: white;
+    margin-bottom: 20px;
+}
