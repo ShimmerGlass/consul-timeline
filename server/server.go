@@ -96,7 +96,6 @@ func (s *Server) Serve() error {
 
 	s.router.GET("/status", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		w.Write([]byte("OK"))
-		w.WriteHeader(http.StatusOK)
 	})
 
 	go func() {
