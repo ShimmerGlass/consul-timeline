@@ -174,6 +174,9 @@ func (w *Watcher) compareChecks(base tl.Event, old structs.HealthChecks, new str
 }
 
 func aggregatedStatus(c structs.HealthChecks) tl.Status {
+	if len(c) == 0 {
+		return tl.StatusPassing
+	}
 	var passing, warning, critical, maintenance bool
 	for _, check := range c {
 		id := string(check.CheckID)
