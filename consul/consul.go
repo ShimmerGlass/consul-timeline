@@ -153,5 +153,12 @@ func (c *Consul) watchServers() {
 func (c *Consul) rpc(method string, in, out interface{}) error {
 	idx := atomic.AddUint64(&c.serverIndex, 1)
 	server := c.servers[int(idx)%len(c.servers)]
-	return c.connPool.RPC(c.dc, server, 3, method, false, in, out)
+	err := c.connPool.RPC(c.dc, server, 3, method, false, in, out)
+	if err != nil {
+		rpcErrorCounter.Inc()
+		return err
+	}
+
+	rpcSuccessCounter.Inc()
+	return nil
 }

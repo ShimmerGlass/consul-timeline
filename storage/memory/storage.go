@@ -24,6 +24,7 @@ func (s *Storage) Store(evt tl.Event) error {
 	s.next = (s.next + 1) % len(s.events)
 	if s.size < len(s.events) {
 		s.size++
+		sizeGauge.Set(float64(s.size))
 	}
 
 	return nil

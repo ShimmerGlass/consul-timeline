@@ -9,6 +9,7 @@ import (
 	tl "github.com/aestek/consul-timeline/timeline"
 	"github.com/gorilla/websocket"
 	"github.com/julienschmidt/httprouter"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -96,6 +97,10 @@ func (s *Server) Serve() error {
 
 	s.router.GET("/status", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		w.Write([]byte("OK"))
+	})
+
+	s.router.GET("/metrics", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		promhttp.Handler().ServeHTTP(w, r)
 	})
 
 	go func() {

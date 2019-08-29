@@ -75,7 +75,7 @@ func (w *Watcher) compareServiceStates(at time.Time, old, new []structs.CheckSer
 		w.compareChecks(base, oldChecks, newState.Checks)
 
 		if len(oldChecks) == 0 && len(newState.Checks) == 0 && oldServiceStatus != newServiceStatus {
-			w.out <- base
+			w.sendEvent(base)
 		}
 	}
 
@@ -101,7 +101,7 @@ func (w *Watcher) compareServiceStates(at time.Time, old, new []structs.CheckSer
 		w.compareChecks(base, oldState.Checks, structs.HealthChecks{})
 
 		if len(oldState.Checks) == 0 {
-			w.out <- base
+			w.sendEvent(base)
 		}
 	}
 }
@@ -155,7 +155,7 @@ func (w *Watcher) compareChecks(base tl.Event, old structs.HealthChecks, new str
 		evt.OldCheckStatus = oldStatus
 		evt.NewCheckStatus = tl.StatusFromString(new.Status)
 		evt.CheckOutput = convertToASCII(new.Output)
-		w.out <- evt
+		w.sendEvent(evt)
 	}
 
 	for _, old := range oldIdx {
@@ -169,7 +169,7 @@ func (w *Watcher) compareChecks(base tl.Event, old structs.HealthChecks, new str
 		evt.CheckName = old.Name
 		evt.OldCheckStatus = tl.StatusFromString(old.Status)
 		evt.NewCheckStatus = tl.StatusMissing
-		w.out <- evt
+		w.sendEvent(evt)
 	}
 }
 

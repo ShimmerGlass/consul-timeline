@@ -52,6 +52,8 @@ func (s *Distributed) lockLoop() {
 	}
 
 	for {
+		isLeaderGauge.Set(0)
+
 		log.Info("aquiring lock")
 		lockChan, err := lock.Lock(nil)
 
@@ -62,6 +64,7 @@ func (s *Distributed) lockLoop() {
 		}
 
 		log.Info("storage lock aquired")
+		isLeaderGauge.Set(1)
 		s.done.Add(1)
 		atomic.StoreUint32(&s.enabled, 1)
 		select {

@@ -81,6 +81,8 @@ func main() {
 		strg = dstrg
 	}
 
+	strg = storage.NewMetrics(strg)
+
 	// consul watch
 	w := watch.New(consul, eventsBuffer)
 	events := w.Run()

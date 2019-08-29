@@ -66,6 +66,11 @@ func (w *Watcher) FilterEntries() []string {
 	return res
 }
 
+func (w *Watcher) sendEvent(evt tl.Event) {
+	eventsCounter.Inc()
+	w.out <- evt
+}
+
 func (w *Watcher) watchServices() {
 	var idx uint64
 
