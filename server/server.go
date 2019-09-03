@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	"net/http/pprof"
 
 	"github.com/NYTimes/gziphandler"
 	"github.com/aestek/consul-timeline/storage"
@@ -102,6 +103,12 @@ func (s *Server) Serve() error {
 	s.router.GET("/metrics", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		promhttp.Handler().ServeHTTP(w, r)
 	})
+
+	s.router.Handler("GET", "/debug/pprof/", http.HandlerFunc(pprof.Index))
+	s.router.Handler("GET", "/debug/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))
+	s.router.Handler("GET", "/debug/pprof/profile", http.HandlerFunc(pprof.Profile))
+	s.router.Handler("GET", "/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
+	s.router.Handler("GET", "/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
 
 	go func() {
 		for e := range s.events {
