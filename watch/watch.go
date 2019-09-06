@@ -279,6 +279,7 @@ func (w *Watcher) handleNodeChanged(node *structs.Node, at time.Time, old, new s
 
 	base := tl.Event{
 		Time:          at,
+		Datacenter:    w.c.Datacenter(),
 		NodeName:      node.Node,
 		NodeIP:        node.Address,
 		OldNodeStatus: oldStatus,

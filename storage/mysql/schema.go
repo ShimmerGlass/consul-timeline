@@ -8,6 +8,7 @@ import (
 var Schema = []string{
 	"CREATE TABLE IF NOT EXISTS events (\n" +
 		"    time DATETIME,\n" +
+		"    datacenter VARCHAR(50),\n" +
 		"    node_name VARCHAR(255),\n" +
 		"    node_ip VARCHAR(45),\n" +
 		"    old_node_status TINYINT,\n" +

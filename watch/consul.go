@@ -10,4 +10,6 @@ type consul interface {
 
 	Nodes(idx uint64) (*structs.IndexedNodes, error)
 	Node(idx uint64, name string) (*structs.IndexedHealthChecks, error)
+
+	Datacenter() string
 }

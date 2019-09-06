@@ -37,7 +37,8 @@ func StatusFromString(s string) Status {
 type Event struct {
 	ID int32 `json:"-"`
 
-	Time time.Time `json:"time,omitempty"`
+	Time       time.Time `json:"time,omitempty"`
+	Datacenter string    `json:"datacenter,omuitempty"`
 
 	NodeName      string `json:"node_name,omitempty"`
 	NodeIP        string `json:"node_ip,omitempty"`

@@ -17,6 +17,7 @@ var _ storage.Storage = (*Storage)(nil)
 
 type Storage struct {
 	cfg Config
+	dc  func() string
 	db  *sql.DB
 
 	insertStmt *sql.Stmt
@@ -24,7 +25,7 @@ type Storage struct {
 	purgeCounter int
 }
 
-func New(cfg Config) (*Storage, error) {
+func New(cfg Config, dc func() string) (*Storage, error) {
 	db, err := sql.Open(
 		"mysql",
 		fmt.Sprintf(
@@ -40,9 +41,23 @@ func New(cfg Config) (*Storage, error) {
 		return nil, err
 	}
 
+	s := &Storage{
+		dc:  dc,
+		cfg: cfg,
+		db:  db,
+	}
+
+	if cfg.SetupSchema {
+		err := s.setup()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	insertStmt, err := db.Prepare(`
 		INSERT INTO events (
 			time,
+			datacenter,
 			node_name,
 			node_ip,
 			old_node_status,
@@ -59,25 +74,14 @@ func New(cfg Config) (*Storage, error) {
 			check_output
 		) VALUES (
 			?, ?, ?, ?, ?, ?, ?, ?,
-			?, ?, ?, ?, ?, ?, ?
+			?, ?, ?, ?, ?, ?, ?, ?
 		)
 	`)
 	if err != nil {
 		return nil, err
 	}
 
-	s := &Storage{
-		insertStmt: insertStmt,
-		cfg:        cfg,
-		db:         db,
-	}
-
-	if cfg.SetupSchema {
-		err := s.setup()
-		if err != nil {
-			return nil, err
-		}
-	}
+	s.insertStmt = insertStmt
 
 	return s, nil
 }
@@ -101,6 +105,7 @@ func (s *Storage) Store(evt tl.Event) error {
 	}
 	_, err := s.insertStmt.Exec(
 		evt.Time,
+		evt.Datacenter,
 		evt.NodeName,
 		evt.NodeIP,
 		evt.OldNodeStatus,
@@ -130,6 +135,7 @@ func (s *Storage) Query(ctx context.Context, q storage.Query) ([]tl.Event, error
 	qs := `
 		SELECT
 			time,
+			datacenter,
 			node_name,
 			node_ip,
 			old_node_status,
@@ -145,9 +151,12 @@ func (s *Storage) Query(ctx context.Context, q storage.Query) ([]tl.Event, error
 			new_check_status,
 			check_output
 		FROM events
-		WHERE time <= ?
+		WHERE
+			time <= ? &&
+			datacenter = ?
 	`
 	args = append(args, q.Start)
+	args = append(args, s.dc())
 	if q.Filter != "" {
 		qs += "&& (service_name = ? || node_name = ?) \n"
 		args = append(args, q.Filter, q.Filter)
@@ -167,6 +176,7 @@ func (s *Storage) Query(ctx context.Context, q storage.Query) ([]tl.Event, error
 		evt := tl.Event{}
 		err := rows.Scan(
 			&evt.Time,
+			&evt.Datacenter,
 			&evt.NodeName,
 			&evt.NodeIP,
 			&evt.OldNodeStatus,

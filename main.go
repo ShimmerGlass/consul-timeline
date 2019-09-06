@@ -59,7 +59,7 @@ func main() {
 
 	switch cfg.Storage {
 	case mysql.Name:
-		strg, err = mysql.New(cfg.Mysql)
+		strg, err = mysql.New(cfg.Mysql, consul.Datacenter)
 		if err != nil {
 			log.Fatal(err)
 		}

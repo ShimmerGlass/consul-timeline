@@ -61,6 +61,7 @@ func (w *Watcher) compareServiceStates(at time.Time, old, new []structs.CheckSer
 
 		base := tl.Event{
 			ID:               w.nextEventID(),
+			Datacenter:       w.c.Datacenter(),
 			Time:             at,
 			ServiceName:      newState.Service.Service,
 			ServiceID:        newState.Service.ID,
@@ -87,6 +88,7 @@ func (w *Watcher) compareServiceStates(at time.Time, old, new []structs.CheckSer
 
 		base := tl.Event{
 			ID:               w.nextEventID(),
+			Datacenter:       w.c.Datacenter(),
 			Time:             at,
 			ServiceName:      oldState.Service.Service,
 			ServiceID:        oldState.Service.ID,

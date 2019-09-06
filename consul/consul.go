@@ -96,6 +96,7 @@ func (c *Consul) Nodes(idx uint64) (*structs.IndexedNodes, error) {
 
 	return out, err
 }
+
 func (c *Consul) Node(idx uint64, name string) (*structs.IndexedHealthChecks, error) {
 	c.ready.Wait()
 
@@ -110,6 +111,11 @@ func (c *Consul) Node(idx uint64, name string) (*structs.IndexedHealthChecks, er
 	}, out)
 
 	return out, err
+}
+
+func (c *Consul) Datacenter() string {
+	c.ready.Wait()
+	return c.dc
 }
 
 func (c *Consul) Lock() (*api.Lock, error) {
